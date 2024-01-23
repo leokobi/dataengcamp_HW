@@ -1,0 +1,39 @@
+docker run -it   -e POSTGRES_USER="root"   -e POSTGRES_PASSWORD="root"   -e POSTGRES_DB="ny_taxi"   -v $(pwd)/ny_taxi_postgres_data:/var/lib/postgresql/data   -p 5432:5432 --network=pg-network --name=pgdatabase   postgres:13
+
+docker run -it   -e PGADMIN_DEFAULT_EMAIL="admin@admin.com"   -e PGADMIN_DEFAULT_PASSWORD="root"   -p 8080:80  --network=pg-network --name=pgadmin  dpage/pgadmin4
+
+
+SELECT COUNT(*) FROM green_taxi_data;
+
+SELECT COUNT(*)
+FROM green_taxi_data
+WHERE 
+    DATE(lpep_pickup_datetime) = '2019-09-18'
+    AND DATE(lpep_dropoff_datetime) = '2019-09-18';
+	
+	
+SELECT 
+    DATE(lpep_pickup_datetime) AS pickup_day,
+    SUM(trip_distance) AS total_trip_distance
+FROM green_taxi_data
+GROUP BY pickup_day
+ORDER BY total_trip_distance DESC
+LIMIT 5;
+
+SELECT 
+    SUM(green_taxi_data.total_amount), location."Borough"	
+FROM green_taxi_data
+INNER JOIN location ON green_taxi_data."PULocationID"=location."LocationID"
+WHERE DATE(lpep_pickup_datetime) = '2019-09-18'
+GROUP BY location."Borough"
+ORDER BY SUM(green_taxi_data.total_amount) DESC
+LIMIT 5;
+
+SELECT location."Zone", green_taxi_data.tip_amount ,green_taxi_data."DOLocationID" ,l2."Zone"
+FROM green_taxi_data
+INNER JOIN location ON green_taxi_data."PULocationID"=location."LocationID"
+INNER JOIN location l2 ON green_taxi_data."DOLocationID"=l2."LocationID"
+WHERE SUBSTRING(green_taxi_data.lpep_pickup_datetime, 1, 7) = '2019-09'
+		AND location."Zone"='Astoria'
+ORDER BY green_taxi_data.tip_amount DESC
+LIMIT 5;
